@@ -9,11 +9,21 @@ export const signIn = async ({ email, password }: signInProps) => {
   try {
     const { account } = await createAdminClient();
 
-    const response = await account.createEmailPasswordSession(email, password);
+    const session = await account.createEmailPasswordSession(email, password);
 
-    return parseStringify(response);
+    cookies().set("appwrite-session", session.secret, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+    });
+
+    console.log("Session created:", session);
+    return parseStringify(session);
   } catch (error) {
-    console.error("Error :", error);
+    console.error("Error in signIn:", error);
+    throw error;
   }
 };
 
@@ -46,15 +56,19 @@ export const signUp = async (userData: SignUpParams) => {
   }
 };
 
-export async function getLoggedInUser() {
+export const getLoggedInUser = async () => {
   try {
+    console.log("Attempting to get logged-in user");
     const { account } = await createSessionClient();
+    console.log("Session client created successfully");
     const user = await account.get();
+    console.log("User data:", user);
     return parseStringify(user);
   } catch (error) {
+    console.error("Error in getLoggedInUser:", error);
     return null;
   }
-}
+};
 
 export const logoutAccount = async () => {
   try {
