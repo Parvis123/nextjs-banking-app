@@ -11,19 +11,16 @@ export async function createSessionClient() {
   const cookieStore = cookies();
   const session = cookieStore.get("appwrite-session");
 
-  console.log("Session cookie:", session);
-
   if (!session || !session.value) {
-    console.log("No session found in cookies");
-    throw new Error("No session");
+    return {
+      account: new Account(client),
+    };
   }
 
   client.setSession(session.value);
 
   return {
-    get account() {
-      return new Account(client);
-    },
+    account: new Account(client),
   };
 }
 
